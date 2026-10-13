@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A first-person underwater horror and survival game. An ocean planet has one wound in its seafloor, and something at the bottom of it is sending a signal.">
+<meta name="theme-color" content="#03090c">
+<meta property="og:type" content="website">
+<meta property="og:title" content="HADAL: The Descent">
+<meta property="og:description" content="A first-person underwater horror and survival game. An ocean planet has one wound in its seafloor, and something at the bottom of it is sending a signal.">
+<meta property="og:url" content="https://alazkhan.github.io/hadal-the-descent/">
+<meta property="og:image" content="https://alazkhan.github.io/hadal-the-descent/img/anchorage-aerial.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303090c'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23f2b552' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23f2b552'/%3E%3C/svg%3E">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>HADAL: The Descent</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Michroma&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: the page is one continuous dive. A depth rail follows the scroll; the water darkens from Hadra's
+   overcast surface to the bottom. The page tells the premise and what you do. Below the Throat it tells
+   nothing: Tethys has withheld the survey, and the names are blacked out. */
+:root{
+  color-scheme:dark;
+  --overcast:#3b4853;   /* surface water under the permanent overcast */
+  --sea:#0e2b33;        /* the Open Sea */
+  --basalt:#081a20;     /* the Throat's black basalt */
+  --deep:#06131a;
+  --deeper:#040c11;
+  --abyss:#03090c;
+  --deepest:#020506;
+  --floor:#210e09;
+  --ink:#ebe8df;        /* bone white */
+  --ink-dim:#b3bcc0;
+  --line:rgba(235,232,223,.18);
+  --signal:#f2b552;     /* amber: the signal, and the page's one accent */
+  --instrument:#74d2da; /* the cyan of the game's own gauges, used on the rail only */
+  --paper:#d8d3c4;      /* the contract */
+  --paper-ink:#1b1f22;
+  --display:"Michroma","Eurostile","Arial Black",sans-serif;
+  --body:"Spectral","Iowan Old Style",Georgia,serif;
+  --mono:"IBM Plex Mono",Consolas,Menlo,monospace;
+  --rail:14rem;
+  --gutter:clamp(1rem,4vw,3rem);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--abyss);color:var(--ink);font:400 1.125rem/1.62 var(--body);-webkit-font-smoothing:antialiased}
+p,h1,h2,h3,h4,dl,dd,ol,ul,figure{margin:0}
+p{text-wrap:pretty}
+a{color:inherit}
+a:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+img{display:block;width:100%;height:auto}
+.mono{font:500 .74rem/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+/* a blacked-out word or line */
+.redact{display:inline-block;width:var(--w,8rem);max-width:100%;height:.95em;vertical-align:-.14em;background:currentColor;border-radius:1px}
+
+/* ---------- depth rail: a bar on phones, a fixed gauge on wide screens ---------- */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:.9rem;
+  padding:.6rem var(--gutter);background:color-mix(in srgb,var(--abyss) 84%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.rail-mark{font:400 .8rem/1 var(--display);letter-spacing:.14em;text-decoration:none}
+.rail-now{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--instrument)}
+.strata{display:none}
+.sig{color:var(--ink-dim);white-space:nowrap}
+.sig-label,.sig-why{display:none}
+.sig b{font-weight:500;color:var(--signal);font-variant-numeric:tabular-nums}
+
+@media (min-width:64rem){
+  .rail{position:fixed;inset:0 auto 0 0;width:var(--rail);flex-direction:column;align-items:stretch;gap:2rem;
+    padding:calc(1.6rem + env(safe-area-inset-top,0px)) 1rem 1.6rem 1.6rem;border-bottom:0;
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--abyss) 78%,transparent),color-mix(in srgb,var(--abyss) 40%,transparent) 70%,transparent)}
+  .rail-mark{font-size:1rem}
+  .rail-now{display:none}
+  .strata{display:flex;flex-direction:column;justify-content:space-between;flex:1;max-height:25rem;
+    list-style:none;padding:0;border-left:1px solid var(--line)}
+  .strata a{position:relative;display:grid;gap:.1rem;padding:.2rem 0 .2rem 1.1rem;color:var(--ink-dim);text-decoration:none;transition:color .3s}
+  .strata a::before{content:"";position:absolute;left:-1px;top:.75em;width:.45rem;height:1px;background:var(--ink-dim);transition:width .3s,background .3s}
+  .strata a:hover{color:var(--ink)}
+  .strata a[aria-current]{color:var(--ink)}
+  .strata a[aria-current]::before{width:.85rem;height:2px;background:var(--instrument)}
+  .strata small{font:400 .68rem/1.3 var(--mono);letter-spacing:.04em;text-transform:none;opacity:.8}
+  .strata .redact{height:.55rem;margin-block:.28rem;vertical-align:0;opacity:.45}
+  .strata a[aria-current] .redact{opacity:.8}
+  .sig{display:grid;gap:.3rem;white-space:normal}
+  .sig-label{display:block;color:var(--ink)}
+  .sig-why{display:block;font:400 .7rem/1.45 var(--mono);letter-spacing:.02em;text-transform:none}
+  .sig b{display:block;font-size:1.5rem;letter-spacing:.06em}
+  .band,.end{padding-left:var(--rail)}
+}
+
+/* ---------- surface ---------- */
+.hero{position:relative;isolation:isolate;overflow:hidden;display:grid;align-items:end;background:var(--overcast)}
+.hero>img{position:absolute;inset:0 0 auto;height:clamp(23rem,56vw,34rem);object-fit:cover;object-position:80% 30%;z-index:-2;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.hero-copy{display:grid;gap:1.1rem;padding:clamp(15.5rem,40vw,24rem) var(--gutter) clamp(2rem,5vw,3.5rem)}
+.hero-copy .mono{color:var(--signal)}
+.hero-side{display:grid;gap:1.1rem}
+h1{font:400 clamp(2.9rem,12vw,6rem)/.95 var(--display);letter-spacing:.08em;text-transform:uppercase}
+h1 span{display:block;margin-top:.45rem;font:italic 400 clamp(1.5rem,3.6vw,2.6rem)/1.2 var(--body);letter-spacing:.01em;text-transform:none}
+.lede{max-width:44ch;font-size:clamp(1.15rem,1.7vw,1.35rem);line-height:1.5}
+.facts{display:flex;flex-wrap:wrap;gap:.5rem 1.75rem;padding:0;list-style:none;color:var(--ink-dim)}
+@media (min-width:64rem){
+  .hero{min-height:clamp(34rem,54vw,46rem)}
+  .hero>img{inset:0;height:100%;object-position:74% 35%;-webkit-mask-image:none;mask-image:none}
+  .hero::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--overcast) 80%,transparent) 74%,var(--overcast) 100%)}
+  .hero-copy{grid-template-columns:auto minmax(0,24rem);column-gap:clamp(2rem,4vw,4rem);align-items:end;
+    padding-top:20rem;padding-left:calc(var(--rail) + var(--gutter))}
+  h1{font-size:clamp(3.6rem,6.4vw,6.6rem)}
+}
+
+/* ---------- strata ---------- */
+.band{padding-block:clamp(4rem,10vw,8rem);background:linear-gradient(180deg,var(--from),var(--to))}
+#open-sea{--from:var(--overcast);--to:var(--sea);padding-top:clamp(2.5rem,6vw,4rem)}
+#throat{--from:var(--sea);--to:var(--basalt)}
+#s5{--from:var(--basalt);--to:var(--deep)}
+#s4{--from:var(--deep);--to:var(--deeper)}
+#s3{--from:var(--deeper);--to:var(--abyss)}
+#s2{--from:var(--abyss);--to:var(--abyss)}
+#s1{--from:var(--abyss);--to:var(--deepest)}
+#floor{--from:var(--deepest);--to:var(--floor);padding-bottom:clamp(5rem,12vw,9rem);
+  background:radial-gradient(70rem 24rem at 50% 100%,color-mix(in srgb,var(--signal) 24%,transparent),transparent 70%),linear-gradient(180deg,var(--from),var(--to))}
+.wrap{display:grid;gap:clamp(3.5rem,8vw,6.5rem);max-width:70rem;margin-inline:auto;padding-inline:var(--gutter)}
+.wrap>*{min-width:0}
+
+.waypoint{display:grid;grid-template-columns:minmax(0,1fr);gap:.8rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+.waypoint .mono{color:var(--signal)}
+h2{font:400 clamp(1.45rem,4.2vw,2.9rem)/1.1 var(--display);letter-spacing:.06em;text-transform:uppercase;text-wrap:balance}
+.there{max-width:48ch;font-style:italic;color:var(--ink-dim)}
+
+/* below the Throat: names and survey blacked out, almost nothing said */
+.withheld{padding-block:clamp(4.5rem,13vw,10rem)}
+.withheld .redact{color:var(--ink-dim);opacity:.4}
+.withheld .there{display:grid;grid-template-columns:minmax(0,1fr);gap:.55rem;justify-items:start;font-style:normal}
+.withheld .there .redact{height:.7em;opacity:.28}
+.withheld .there small{font:400 .74rem/1.45 var(--mono);color:var(--ink-dim)}
+.fragment{max-width:30ch;font-size:clamp(1.3rem,2.8vw,1.9rem);line-height:1.4}
+.fragment.far{justify-self:end;color:var(--ink-dim)}
+
+.block{display:grid;gap:clamp(1.5rem,3vw,2.25rem)}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(1.75rem,5vw,4.5rem);align-items:start}
+.col{display:grid;gap:1.1rem;min-width:0}
+.col p{max-width:62ch}
+h3{font:600 clamp(1.6rem,3.2vw,2.3rem)/1.15 var(--body);text-wrap:balance}
+h4{font:500 .78rem/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--signal)}
+.strong{font-size:1.3rem;line-height:1.45;font-style:italic}
+
+figure{display:grid;gap:.55rem;min-width:0}
+figure img{border-radius:3px;background:var(--abyss)}
+figure img.crop{aspect-ratio:var(--ar);object-fit:cover}
+figcaption{font:400 .74rem/1.45 var(--mono);color:var(--ink-dim)}
+.gallery{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(.9rem,2vw,1.4rem);align-items:start}
+.g-12{grid-column:span 12}.g-7{grid-column:span 7}.g-6{grid-column:span 6}.g-5{grid-column:span 5}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem}
+
+.needs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 clamp(1.5rem,4vw,3rem)}
+.needs div{display:grid;gap:.3rem;align-content:start;padding-block:1rem;border-top:1px solid var(--line)}
+.needs dt{font:500 .78rem/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--signal)}
+.needs dd{font-size:1.02rem;line-height:1.55}
+
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;display:grid;grid-template-columns:2.6rem minmax(0,1fr);padding-block:.7rem;border-top:1px solid var(--line)}
+.steps li::before{content:counter(s,decimal-leading-zero);padding-top:.42em;font:500 .76rem/1 var(--mono);color:var(--signal)}
+
+/* the contract is the one bright object on the page */
+.contract{display:grid;gap:1rem;padding:clamp(1.25rem,3vw,2rem);background:var(--paper);color:var(--paper-ink);border-radius:2px}
+.contract .c-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.25rem 1rem;padding-bottom:.8rem;border-bottom:1px solid var(--paper-ink);
+  font:500 .68rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.contract h4{font:400 clamp(1rem,2.2vw,1.3rem)/1.2 var(--display);letter-spacing:.06em;color:var(--paper-ink)}
+.c-fields{display:grid;gap:.4rem;font:400 .8rem/1.5 var(--mono)}
+.c-fields div{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:.75rem}
+.c-fields dt{text-transform:uppercase;letter-spacing:.08em;opacity:.7}
+.c-terms{display:grid;gap:.6rem;padding-left:1.3rem;font-size:1rem;line-height:1.5}
+.c-terms li::marker{font:500 .78rem var(--mono)}
+.c-terms .redact{margin-right:.3rem}
+.c-foot{padding-top:.8rem;border-top:1px solid var(--paper-ink);font:500 .76rem/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+
+.pulse-read{display:grid;gap:.4rem;justify-items:start}
+.pulse-read .mono{color:var(--ink-dim)}
+.pulse-read b{font:400 clamp(3.4rem,15vw,9.5rem)/1 var(--display);letter-spacing:.04em;color:var(--signal);font-variant-numeric:tabular-nums}
+.last{font:italic 400 clamp(1.5rem,3.6vw,2.6rem)/1.25 var(--body);text-wrap:balance}
+
+.end{background:var(--floor);color:var(--ink-dim)}
+.end .wrap{gap:.6rem;padding-block:2rem calc(2.5rem + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.end p{max-width:70ch;font:400 .78rem/1.6 var(--mono)}
+.end strong{font-weight:500;color:var(--ink)}
+
+/* the return, every eleven minutes */
+.pulse{position:fixed;left:50%;bottom:-70vmax;width:140vmax;height:140vmax;margin-left:-70vmax;border-radius:50%;
+  border:2px solid var(--signal);box-shadow:0 0 5rem color-mix(in srgb,var(--signal) 40%,transparent) inset;
+  opacity:0;transform:scale(.04);pointer-events:none;z-index:4}
+.pulse.go{animation:ret 8s cubic-bezier(.15,.6,.25,1) 1}
+@keyframes ret{0%{opacity:0;transform:scale(.04)}10%{opacity:.75}100%{opacity:0;transform:scale(1.5)}}
+
+@media (max-width:52rem){
+  .split,.needs{grid-template-columns:minmax(0,1fr)}
+  .gallery>*{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .pulse.go{animation:none}
+  .strata a,.strata a::before{transition:none}
+}
+</style>
+
+<div class="page" id="top">
+
+<nav class="rail mono" aria-label="Strata">
+  <a class="rail-mark" href="#top">HADAL</a>
+  <span class="rail-now" id="now">The Open Sea</span>
+  <ol class="strata">
+    <li><a href="#open-sea" data-name="The Open Sea" aria-current="true"><span>The Open Sea</span><small>0 m</small></a></li>
+    <li><a href="#throat" data-name="The Throat"><span>The Throat</span><small>about 1,000 m</small></a></li>
+    <li><a href="#s5" data-name="Withheld" aria-label="Name withheld"><span class="redact" style="--w:5.6rem"></span></a></li>
+    <li><a href="#s4" data-name="Withheld" aria-label="Name withheld"><span class="redact" style="--w:3.9rem"></span></a></li>
+    <li><a href="#s3" data-name="Withheld" aria-label="Name withheld"><span class="redact" style="--w:6.2rem"></span></a></li>
+    <li><a href="#s2" data-name="Withheld" aria-label="Name withheld"><span class="redact" style="--w:5rem"></span></a></li>
+    <li><a href="#s1" data-name="Withheld" aria-label="Name withheld"><span class="redact" style="--w:4.3rem"></span></a></li>
+    <li><a href="#floor" data-name="The Floor"><span>The Floor</span><small>depth unknown</small></a></li>
+  </ol>
+  <div class="sig">
+    <span class="sig-label">Signal</span>
+    <span id="sig-off">Not received<span class="sig-why">The water above the seafloor swallows it.</span></span>
+    <span id="sig-on" hidden><span class="sig-why">Next pulse in</span><b class="t-minus">11:00</b></span>
+  </div>
+</nav>
+
+<header class="hero">
+  <img src="img/anchorage-waterline.webp" width="1920" height="1080" alt="A grey carrier submarine moored bow-on at a low station on the ice, under an overcast sky.">
+  <div class="hero-copy">
+    <div class="hero-side">
+    <p class="mono">A Tethys Consolidated penal contract</p>
+    <h1>Hadal <span>The Descent</span></h1>
+    </div>
+    <div class="hero-side">
+    <p class="lede">An ocean planet has one wound in its seafloor, and something at the bottom of it is sending a signal. Machines stop working down there and free crews don't come back, so Tethys sends a convict instead.</p>
+    <ul class="facts mono">
+      <li>First-person underwater horror, survival and mystery</li>
+      <li>In development in Unreal Engine 5</li>
+    </ul>
+    </div>
+  </div>
+</header>
+
+<main class="dive">
+
+<section class="band" id="open-sea" data-stratum="0">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">Surface to about 1,000 m · seven strata above the Floor</p>
+      <h2>The Open Sea</h2>
+      <p class="there">From Anchorage at the surface down to the seafloor. Bright, and full of life. The last time you see the sky.</p>
+    </header>
+
+    <div class="split">
+      <div class="col">
+        <h3>Hadra</h3>
+        <p>Hadra orbits a dim red dwarf 31 light-years from Earth. It is slightly smaller than Earth and has no land at all. A single ocean covers the whole planet under a permanent overcast.</p>
+        <p>The only feature anyone has charted is the Throat, a vertical fissure 400 m wide in the seafloor.</p>
+      </div>
+      <div class="col">
+        <h3>The signal</h3>
+        <p>In 2193 a survey probe went down the Throat and fired one deep sonar pulse straight down. The return came back louder than the pulse that went down. An hour later the probe stopped transmitting.</p>
+        <p>The return never stopped. It cannot be heard from the surface. Below about 1,000 m, anything that listens picks it up: one deep, slow pulse every eleven minutes.</p>
+        <p class="strong">Tethys wants two answers: what is sending it, and what it is made of.</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <figure>
+        <img src="img/anchorage-processing.webp" width="1600" height="900" loading="lazy" class="crop" style="--ar:21/9" alt="An empty arrivals hall with the word PROCESSING lettered on the floor in front of a sealed lock.">
+        <figcaption>Arrivals at Anchorage. Nobody lives here.</figcaption>
+      </figure>
+      <div class="split">
+        <div class="col">
+          <h3>The Commutation</h3>
+          <p>Machines stop working down there, and free crews don't come back. Free crews are expensive, and their families ask questions.</p>
+          <p>So Tethys found people nobody asks about. A prisoner serving life, or waiting for execution, can sign a Descent Commutation.</p>
+          <p class="strong">You are one of them.</p>
+        </div>
+        <article class="contract">
+          <p class="c-head"><span>Tethys Consolidated</span><span>Colonial Registry penal programme</span></p>
+          <h4>Descent Commutation</h4>
+          <dl class="c-fields">
+            <div><dt>Subject</dt><dd><span class="redact" style="--w:11rem" role="img" aria-label="redacted"></span></dd></div>
+            <div><dt>Eligible</dt><dd>Serving life, or waiting for execution</dd></div>
+          </dl>
+          <ol class="c-terms">
+            <li>One descent, in exchange for the sentence.</li>
+            <li>The subject is converted before transport. Both arms and both legs are replaced with reinforced limbs of metal alloy. <span class="redact" style="--w:9rem" role="img" aria-label="redacted"></span></li>
+            <li><span class="redact" style="--w:13rem" role="img" aria-label="redacted"></span><span class="redact" style="--w:6rem" role="img" aria-label="redacted"></span></li>
+            <li>Transport is nineteen years in cryo aboard a Tethys ship.</li>
+            <li><span class="redact" style="--w:8rem" role="img" aria-label="redacted"></span><span class="redact" style="--w:10rem" role="img" aria-label="redacted"></span></li>
+            <li>Reaching the source of the signal ends the sentence outright.</li>
+          </ol>
+          <p class="c-foot">Nobody has collected yet.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="col">
+        <h3>What is left of you</h3>
+        <p>Your new limbs run on charge, do not tire and do not feel the cold. Everything else is still human, and it needs four things.</p>
+        <p>The conversion was only the start. Your limbs are built to be opened and refitted, and the rest of you can take more hardware.</p>
+      </div>
+      <dl class="needs">
+        <div><dt>Charge</dt><dd>Your limbs run on power from the carrier.</dd></div>
+        <div><dt>Food</dt><dd>You can eat, or plug the port in your side into the nutrient line in the wall. Its reserve runs out, and the only way to refill it is to catch what lives in the water.</dd></div>
+        <div><dt>Air</dt><dd>You still breathe. In the water you breathe from a tank.</dd></div>
+        <div><dt>Warmth</dt><dd>The cabin is held at 26 °C, because everything but your limbs is still human.</dd></div>
+      </dl>
+    </div>
+
+    <div class="block">
+      <div class="split">
+        <figure>
+          <img src="img/anchorage-aerial.webp" width="1920" height="1080" loading="lazy" alt="Seen from above: a station of low flat-roofed halls on an ice floe, with a long grey carrier moored along its edge.">
+          <figcaption>Anchorage on its ice floe, at sea level above the Throat. Model render.</figcaption>
+        </figure>
+        <div class="col">
+          <h3>The CANTICLE</h3>
+          <p>The ship that brought you stays in orbit. It sends you down to Anchorage, where the carrier is already moored, fuelled and ready.</p>
+          <p>The CANTICLE is a deep carrier built for a crew of one. Every section of it is modular. You refit it as you go, and you build and place what stands inside it.</p>
+          <p>You steer it yourself. It is too big for most of the Throat, so it goes where you open a way for it. There is no other way down.</p>
+        </div>
+      </div>
+      <div class="gallery">
+        <figure class="g-6"><img src="img/boarding-bridge.webp" width="1600" height="900" loading="lazy" alt="A dark boarding bridge ending at a hull door, with STAND CLEAR lettered on the floor."><figcaption>The boarding bridge at the hull.</figcaption></figure>
+        <figure class="g-6"><img src="img/canticle-hull.webp" width="1600" height="900" loading="lazy" alt="The smooth grey forebody of the carrier with its long bridge window."><figcaption>The forebody and the bridge window.</figcaption></figure>
+        <figure class="g-7"><img src="img/canticle-sub-bay.webp" width="1600" height="900" loading="lazy" alt="A white and teal submarine hanging from an arm over a railed gallery inside the carrier."><figcaption>The sub bay, with a Tender on the docking arm.</figcaption></figure>
+        <figure class="g-5"><img src="img/canticle-quarters.webp" width="1300" height="1300" loading="lazy" class="crop" style="--ar:80/63" alt="A black cabin with a bunk set into a padded alcove."><figcaption>Quarters.</figcaption></figure>
+        <figure class="g-6"><img src="img/canticle-passage.webp" width="1600" height="900" loading="lazy" alt="A blue-lit passage lined with heavy pressure doors."><figcaption>The fore passage.</figcaption></figure>
+        <figure class="g-6"><img src="img/canticle-reactor.webp" width="1600" height="900" loading="lazy" alt="A wide dark room lit orange, with two round reactor vessels either side of a walkway."><figcaption>The reactor room.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="throat" data-stratum="1">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">About 1,000 m, the seafloor · six strata above the Floor</p>
+      <h2>The Throat</h2>
+      <p class="there">Caves and cavities in black basalt and silt, and the first ore. The last dim red light.</p>
+    </header>
+
+    <div class="split">
+      <div class="col">
+        <h3>Open the way</h3>
+        <p>The carrier's bay holds Tenders: small modular submarines that you build and refit as you go. The bay is empty when you arrive. Until the first Tender is built, you leave through the moon pool, swim, and cut ore loose with a handheld tool.</p>
+        <ol class="steps">
+          <li>Take a Tender out through the moon pool.</li>
+          <li>Find a way down, with sonar or by swimming.</li>
+          <li>Drill through what blocks it.</li>
+          <li>Collect the ore, and catch what lives there.</li>
+          <li>Cut the passage wide enough for the carrier.</li>
+          <li>Go back aboard and take the carrier through yourself.</li>
+        </ol>
+      </div>
+      <div class="col">
+        <figure>
+          <img src="img/tender-kazah.webp" width="1280" height="720" loading="lazy" alt="A small white submarine with a glass canopy and orange tanks resting on a dark seabed, headlamps on.">
+          <figcaption>A Tender on the seabed. In-engine capture, work in progress.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/docking-arm.webp" width="1600" height="1000" loading="lazy" alt="A jointed mechanical arm on a round hub, holding two small submarines.">
+          <figcaption>The bay's docking arm carries the Tenders to the moon pool. Model render.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="split">
+        <div class="col">
+          <h3>Ore</h3>
+          <p>A Tender drills first, then draws the loose ore into its hold. Docked, it unloads through clear pipes into the cargo bay, where the ore is packed into boxes. You carry each box to the refinery yourself, until you have built something to carry it for you.</p>
+          <p>Ore is refined on board into everything you need: hull sections, Tender frames, drill heads, robots, and parts for yourself.</p>
+          <div class="pair">
+            <figure><img src="img/ore-cobalt.webp" width="1000" height="750" loading="lazy" alt="A dark rock with blue crystal clusters."><figcaption>Cobalt.</figcaption></figure>
+            <figure><img src="img/ore-gold.webp" width="1000" height="750" loading="lazy" alt="A dark rock with dull gold nodules."><figcaption>Gold.</figcaption></figure>
+          </div>
+        </div>
+        <figure>
+          <img src="img/ingame-cockpit.webp" width="1600" height="900" loading="lazy" alt="A Tender's dashboard in a dark cave: hull at 100 percent, depth 1,843 m, and a cargo display with five ore boxes.">
+          <figcaption>The Tender's dashboard: hull, depth, power, and the cargo hold filling. In-engine capture, work in progress.</figcaption>
+        </figure>
+      </div>
+      <figure>
+        <img src="img/ore-mining-stages.webp" width="2400" height="600" loading="lazy" alt="The same ore-bearing rock three times, with fewer ore clusters left in it each time.">
+        <figcaption>One ore patch as it is mined out. Model render.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="band withheld" id="s5" data-stratum="2">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">Five strata above the Floor</p>
+      <h2><span class="redact" style="--w:11ch" role="img" aria-label="Name withheld"></span></h2>
+      <p class="there"><small>From here down, the survey is withheld by Tethys Consolidated.</small></p>
+    </header>
+    <p class="fragment">No map of the Throat stays true for long.</p>
+  </div>
+</section>
+
+<section class="band withheld" id="s4" data-stratum="3">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">Four strata above the Floor</p>
+      <h2><span class="redact" style="--w:7ch" role="img" aria-label="Name withheld"></span></h2>
+      <p class="there" role="img" aria-label="Description withheld"><span class="redact" style="--w:24rem"></span><span class="redact" style="--w:15rem"></span></p>
+    </header>
+  </div>
+</section>
+
+<section class="band withheld" id="s3" data-stratum="4">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">Three strata above the Floor</p>
+      <h2><span class="redact" style="--w:12ch" role="img" aria-label="Name withheld"></span></h2>
+      <p class="there" role="img" aria-label="Description withheld"><span class="redact" style="--w:19rem"></span><span class="redact" style="--w:26rem"></span></p>
+    </header>
+    <p class="fragment far">The deeper you go, the bigger the creatures get, and the rarer they are.</p>
+  </div>
+</section>
+
+<section class="band withheld" id="s2" data-stratum="5">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">Two strata above the Floor</p>
+      <h2><span class="redact" style="--w:10ch" role="img" aria-label="Name withheld"></span></h2>
+      <p class="there" role="img" aria-label="Description withheld"><span class="redact" style="--w:22rem"></span></p>
+    </header>
+  </div>
+</section>
+
+<section class="band withheld" id="s1" data-stratum="6">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">One stratum above the Floor</p>
+      <h2><span class="redact" style="--w:8ch" role="img" aria-label="Name withheld"></span></h2>
+      <p class="there" role="img" aria-label="Description withheld"><span class="redact" style="--w:16rem"></span><span class="redact" style="--w:9rem"></span></p>
+    </header>
+    <p class="fragment">Tethys also left you your fear. It is not a defect.</p>
+  </div>
+</section>
+
+<section class="band" id="floor" data-stratum="7">
+  <div class="wrap">
+    <header class="waypoint">
+      <p class="mono">The source</p>
+      <h2>The Floor</h2>
+      <p class="there">The official survey lists it as "the Floor, depth unknown".</p>
+    </header>
+    <div class="pulse-read">
+      <span class="mono">Next pulse in</span>
+      <b class="t-minus">11:00</b>
+    </div>
+    <p class="last">Your sentence ends at the bottom.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="end">
+  <div class="wrap">
+    <p><strong>HADAL: The Descent</strong> is in development in Unreal Engine 5. There is no release date.</p>
+    <p>The pictures on this page are model renders and in-engine captures of work in progress. Everything shown can still change.</p>
+  </div>
+</footer>
+
+<div class="pulse" aria-hidden="true"></div>
+</div>
+
+<script>
+(function(){
+  // which stratum is at the middle of the screen
+  var links=[].slice.call(document.querySelectorAll('.strata a'));
+  var now=document.getElementById('now');
+  var off=document.getElementById('sig-off'), on=document.getElementById('sig-on');
+  var depth=0;
+  function setDepth(i){
+    depth=i;
+    links.forEach(function(a,k){ if(k===i) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current'); });
+    now.textContent=links[i].getAttribute('data-name');
+    // the signal cannot be heard above the seafloor
+    off.hidden=i>=1; on.hidden=i<1;
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting) setDepth(+e.target.getAttribute('data-stratum')); });
+    },{rootMargin:'-50% 0px -50% 0px'});
+    [].forEach.call(document.querySelectorAll('[data-stratum]'),function(b){ io.observe(b); });
+  }
+
+  // one pulse every eleven minutes, on the same clock for every visitor
+  var CYCLE=660, outs=document.querySelectorAll('.t-minus'), ring=document.querySelector('.pulse'), last=-1;
+  function tick(){
+    var left=Math.floor(CYCLE-(Date.now()/1000)%CYCLE);
+    var m=Math.floor(left/60), s=left%60, txt=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    [].forEach.call(outs,function(o){ o.textContent=txt; });
+    if(last>=0 && left>last && depth>=1){ ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go'); }
+    last=left;
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+
+</body>
+</html>
